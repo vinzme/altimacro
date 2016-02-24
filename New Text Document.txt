@@ -1,0 +1,150 @@
+Step 1: Replace with Validation - Column B
+Step 2: Check if CheckStatus2 will work
+Step 3: Try pasting with invalid Status
+Step 4: Try to look for tbl_uc_activation temp table
+        create a new one if not existing
+        Note:Check if propertycode and utility is unique
+Step 5: update uc table into LIVE
+
+Audit trail: Add time field
+mLogTime = Format(gLogDateTime, "hh:mm")
+
+Private Sub GetServerDateTime()
+
+sSql = "Select getdate() as logdate from Ericsson.scheme.and_hd_request_hardware_user where userid = 'ALVIN.DELEON'"
+If DataAccess.GetRecordset(sConnectSQL, sSql, oRs3) Then
+    If oRs3.RecordCount > 0 Then
+        gLogDateTime = oRs3!logdate
+        mLogDate = Format(gLogDateTime, "dd mmm yyyy")
+        mLogTime = Format(gLogDateTime, "hh:mm")
+    End If
+End If
+oRs3.Close
+Set oRs3 = Nothing
+
+End Sub
+
+
+
+
+Other stuff: use mis414 connection to your asp.net website
+
+***************************
+Activation
+
+
+table : tbl_UC_Activation
+tbl_UC_and_Status
+tbl_UC_and_Audit
+
+
+
+
+criteria: propertycode, utility
+
+
+update: status = moved status
+
+        previous_status field = status(col. b)
+
+      postedby = username
+
+      posted date = col.h(date)
+
+      vms posted date = col.h (date)
+
+      vms tagged = 1
+
+      tagged as = "Manual Tagged"
+
+      comment = Null
+
+      
+
+
+only TL can update
+
+----------------------
+
+validation:
+
+drop down
+tl will update
+
+besides drop down - check staus
+
+
+
+*******************************
+
+Status
+----------------------------------------------------------------------------------------------------
+
+(0 row(s) affected)
+
+PropertyCode                                                                                         Utility                                            Status                                                                                                                                                                                                                                                          PostedBy   PostedDate              PreviousStatus                                                                                                                                                                                                                                                  DateClicked
+---------------------------------------------------------------------------------------------------- -------------------------------------------------- --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- ---------- ----------------------- --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- -----------------------
+
+(0 row(s) affected)
+
+
+***********************************
+
+SELECT TOP 1000 [USP]
+      ,[PropertyCode]
+      ,[TimeZone]
+      ,[PhoneNo]
+      ,[AccountNo]
+      ,[Address]
+      ,[Utility]
+      ,[Category]
+      ,[ToDo]
+      ,[Status]
+      ,[SLA]
+      ,[PostedBy]
+      ,[PostedDate]
+      ,[AgentNTID]
+      ,[PreviousStatus]
+      ,[DateUploaded]
+      ,[UpdateFlag]
+      ,[VMSPostedDate]
+      ,[Skip]
+      ,[SkipReason]
+      ,[PhoneNoDialed]
+      ,[USPRep]
+      ,[BaseChargeAmt]
+      ,[VendorId]
+      ,[CurrentUSP]
+      ,[MeterNo]
+      ,[WithDeeds]
+      ,[LockCode]
+      ,[ForeclosureDate]
+      ,[FaxStatus]
+      ,[FaxDate]
+      ,[USPFaxed]
+      ,[IsNew]
+      ,[HasICase]
+      ,[Origin]
+      ,[VMSTagged]
+      ,[Comments]
+      ,[PredictionLogic]
+      ,[IsPaymentReq]
+      ,[IsDocumentReq]
+      ,[IsCityInspectionReq]
+      ,[IsBreakerGas]
+      ,[IsActivationOfAnotherUtility]
+      ,[BorrowersName]
+      ,[ID]
+      ,[RPMOnHold]
+      ,[Comment]
+      ,[wiAdded]
+      ,[WIDate]
+      ,[taggedAs]
+      ,[IsWorked]
+  FROM [MIS_ALTI].[dbo].[tbl_UC_Activation]
+
+
+
+
+
+
