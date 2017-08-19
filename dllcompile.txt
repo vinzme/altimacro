@@ -1,0 +1,7 @@
+https://stackoverflow.com/questions/9465499/dll-not-being-updated-when-building-my-solution
+
+
+https://stackoverflow.com/questions/2070624/visual-studio-project-dll-not-updating-in-web-site-project-same-solution
+
+
+https://forums.asp.net/t/1307005.aspx?Compiled+Assemblies+dll+How+to+decompile+edit+and+recompile+
