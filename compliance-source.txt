@@ -1,0 +1,53 @@
+Ticketview.aspx
+
+        Thank You, We are in receipt of your request.<br />
+        If you need to speak with VMS Support Representative, please call 297375 or contact <a href="mailto:VMS-Support@altisource.com">
+        VMS-Support@altisource.com</a> for any queries.</p>
+
+*****************
+
+Ticketview.aspx.cs
+
+Msg.From = "vms-support@altisource.com";
+
+Msg.Body = "Greetings <br />This is an automated response, please don’t reply back.<br />We are in receipt of your request. If you need to speak with VMS Support Representative, please call 297375 or contact VMS-Support@altisource.com for any queries." +
+
+
+Msg.From = "vms-support@altisource.com";
+                                Msg.Body = "Good day, <br /><br /> Your ticket has been reviewed and updated by Compliance Representative. To know more on the status of your ticket, please click on the below URL." +
+                                            "<br /><br /> <a href= http://172.24.130.91/ticketview.aspx?str=Search&name=" + Ticketno + " >Check Status</a>" + 
+                                            "<br /><br /> Thank You,<br /><br />VMS Support"; 
+
+
+****************
+
+Ticketwork.aspx.cs
+
+
+Msg.From = "vms-support@altisource.com";
+
+                            Msg.Body = "Good day, <br /><br /> Your ticket has been reviewed and updated by VMS Support Representative. To know more on the status of your ticket, please click on the below URL." +
+                                        "<br /><br /> <a href= http://172.24.130.91/ticketview.aspx?str=Search&name=" + Ticketno + " >Check Status</a>" +
+                                        "<br /><br /> Thank You,<br /><br />VMS Support";
+
+
+
+***************************************
+
+
+Aileen,
+
+If you need to speak with a Compliance Support Representative, please call 214592/211938 or contact XXXXX@altisource.com for any queries.  I will provide the common mailbox details shortly.  
+
+Remember, Compliance starts with you!
+
+
+
+
+
+
+
+
+
+
+
