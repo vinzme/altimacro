@@ -1,0 +1,26 @@
+http://edocs.mitel.com/UG/UCA_Web_Help/Admin_Web_Help/7.0/uca/common_ad_ldap_field_mappings.htm
+
+
+https://stackoverflow.com/questions/20962923/column-abc-does-not-belong-to-table
+
+
+Log Entry : 10/04/2017 08:40:13
+Error in: http://afscompliancesupport.ascorp.com/domainexport.aspx.
+Error Message:Column 'Manager' does not belong to table People.
+user:ASCORP\deleoalv
+Error in: http://afscompliancesupport.ascorp.com/domainexport.aspx. Error Message:System.Data
+__________________________
+
+Log Entry : 10/04/2017 08:41:26
+Error in: http://afscompliancesupport.ascorp.com/domainexport.aspx.
+Error Message:Column 'Manager' does not belong to table People.
+user:ASCORP\deleoalv
+Error in: http://afscompliancesupport.ascorp.com/domainexport.aspx. Error Message:System.Data
+__________________________
+
+Log Entry : 10/04/2017 08:51:47
+Error in: http://afscompliancesupport.ascorp.com/domainexport.aspx.
+Error Message:Column 'Manager' does not belong to table People.
+user:ASCORP\deleoalv
+Error in: http://afscompliancesupport.ascorp.com/domainexport.aspx. Error Message:System.Data
+__________________________
