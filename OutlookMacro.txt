@@ -1,0 +1,409 @@
+Option Explicit
+
+Dim gTicket_ID As String
+Dim gReq_name As String
+Dim gReq_netid As String
+Dim gReq_email As String
+Dim gReq_ext As String
+Dim gReq_dept As String
+Dim gReq_approved As String
+Dim gCreated As String
+Dim gETA_date As String
+Dim gPiority As String
+Dim gStatus As String
+Dim gReq_category As String
+Dim gReq_type As String
+Dim gFollow_up_date As String
+Dim gReq_comments As String
+Dim gRepresentative As String
+Dim gBackupRepresentative As String
+Dim gLast_updated_by As String
+
+Dim gSubject As String
+
+Dim gEmailFolder As String
+
+Dim gFilename As String
+
+Sub AssignTicketValues()
+
+'Joseph
+'gReq_name = "Manlangit, Joseph Anthony V"
+'gReq_netid = "manlangj"
+'gReq_email = "JosephAnthony.Manlangit@altisource.com"
+'gReq_ext = "+1 (770) 612-7007 x293037"
+'gReq_dept = "PFC - PROPERTY PRESERVATION AND INSPECTION - SS"
+
+'gPiority = "1"
+'gStatus = "1"
+'gReq_category = "4"
+'gReq_type = "25"
+'gFollow_up_date = "1/1/1900"
+'gRepresentative = "49"
+'gBackupRepresentative = "32"
+'gLast_updated_by = "manlangj"
+
+'Lanvin
+gReq_name = "Lirio, Lanvin C"
+gReq_netid = "liriolan"
+gReq_email = "Lanvin.Lirio@altisource.com"
+gReq_ext = "+1 (770) 612-7007 x293840"
+gReq_dept = "PFC - PROPERTY PRESERVATION AND INSPECTION - SS"
+
+gPiority = "1"
+gStatus = "1"
+gReq_category = "4"
+gReq_type = "25"
+gFollow_up_date = "1/1/1900"
+gRepresentative = "32"
+gBackupRepresentative = "49"
+gLast_updated_by = "liriolan"
+
+
+gReq_approved = "Abad Aileen"
+gEmailFolder = "\\ascorp.com\data\bangalore\CommonShare\Strategic$\Manila Schedule\Tickets-Email\"
+
+End Sub
+
+Sub GetTicketNo()
+
+    Dim conn As ADODB.Connection
+    Dim rs As ADODB.Recordset
+    Dim sConnString As String
+
+    ' Create the connection string.
+    sConnString = "Provider=SQLOLEDB;Data Source=NAV12SQTTNP01;Initial Catalog=VMSSUP;Persist Security Info=True;User ID=SA;Password=PasswordforVMS"
+
+    ' Create the Connection and Recordset objects.
+    Set conn = New ADODB.Connection
+    Set rs = New ADODB.Recordset
+
+    ' Open the connection and execute.
+    conn.Open sConnString
+    Set rs = conn.Execute("SELECT top 1 Ticket_id from dbo.tblticket where Last_updated_by = '" & gReq_netid & "' order by Ticket_id desc")
+
+    ' Check we have data.
+    If Not rs.EOF Then
+        gTicket_ID = rs!Ticket_id
+    Else
+        gTicket_ID = ""
+    End If
+    
+    rs.Close
+    Set rs = Nothing
+
+End Sub
+
+Sub InsertIntoTicket()
+
+Dim cnnInsert As ADODB.Connection
+Dim uSQLInsert As String
+Dim connString As String
+
+Dim mstrLogDate As String
+Dim mstrLogTime As String
+
+'Set Connection string
+Set cnnInsert = New Connection
+
+connString = "Provider=SQLOLEDB;Data Source=NAV12SQTTNP01;Initial Catalog=VMSSUP;Persist Security Info=True;User ID=SA;Password=PasswordforVMS"
+
+'Connect and Run the SQL statement to update the records.
+cnnInsert.Open connString
+
+       
+uSQLInsert = "insert into dbo.tblticket(Req_name,Req_netid,Req_email,Req_ext,Req_dept,Req_approved,Created,ETA_date,Piority,Status,Req_category,Req_type," & _
+                "Follow_up_date,Req_comments,Representative,BackupRepresentative,Last_updated_by) values('" & _
+                gReq_name & "','" & gReq_netid & "','" & gReq_email & "','" & gReq_ext & "','" & gReq_dept & "','" & _
+                gReq_approved & "','" & gCreated & "','" & gETA_date & "','" & gPiority & "','" & _
+                gStatus & "','" & gReq_category & "','" & gReq_type & "','" & gFollow_up_date & "','" & gReq_comments & "','" & gRepresentative & "','" & _
+                gBackupRepresentative & "','" & gLast_updated_by & "')"
+
+cnnInsert.Execute uSQLInsert
+
+cnnInsert.Close
+Set cnnInsert = Nothing
+
+End Sub
+
+Sub InsertIntoTicketFile()
+
+Dim cnnInsert As ADODB.Connection
+Dim uSQLInsert As String
+Dim connString As String
+
+Dim mstrLogDate As String
+Dim mstrLogTime As String
+
+'Set Connection string
+Set cnnInsert = New Connection
+
+connString = "Provider=SQLOLEDB;Data Source=NAV12SQTTNP01;Initial Catalog=VMSSUP;Persist Security Info=True;User ID=SA;Password=PasswordforVMS"
+
+'Connect and Run the SQL statement to update the records.
+cnnInsert.Open connString
+
+       
+uSQLInsert = "insert into dbo.Files(File_Name,File_type,Ticket_id,data) values('" & _
+                Trim(gSubject) & "','.msg','" & gTicket_ID & "','" & gTicket_ID & Trim(gSubject) & "')"
+
+cnnInsert.Execute uSQLInsert
+
+cnnInsert.Close
+Set cnnInsert = Nothing
+
+End Sub
+
+Sub SaveAllEmails_ProcessAllSubFolders()
+
+Dim i As Long
+Dim j As Long
+Dim n As Long
+Dim StrSubject As String
+Dim StrName As String
+Dim StrFile As String
+Dim StrReceived As String
+Dim StrSavePath As String
+Dim StrFolder As String
+Dim StrFolderPath As String
+Dim StrSaveFolder As String
+
+Dim StrBody As String
+
+Dim Prompt As String
+Dim Title As String
+Dim iNameSpace As NameSpace
+Dim myOlApp As Outlook.Application
+Dim SubFolder As MAPIFolder
+Dim mItem As MailItem
+Dim FSO As Object
+Dim ChosenFolder As Object
+Dim Folders As New Collection
+Dim EntryID As New Collection
+Dim StoreID As New Collection
+Dim StrTo As String
+
+AssignTicketValues
+
+
+Set FSO = CreateObject("Scripting.FileSystemObject")
+Set myOlApp = Outlook.Application
+
+Set iNameSpace = myOlApp.GetNamespace("MAPI")
+
+'Set ChosenFolder = iNameSpace.PickFolder
+
+Set ChosenFolder = iNameSpace.GetDefaultFolder(olFolderInbox).Folders("Tickets")
+
+If ChosenFolder Is Nothing Then
+GoTo ExitSub:
+End If
+
+
+Prompt = "Please enter the path to save all the emails to."
+Title = "Folder Specification"
+'StrSavePath = BrowseForFolder
+'If StrSavePath = "" Then
+'GoTo ExitSub:
+'End If
+If Not Right(StrSavePath, 1) = "\" Then
+StrSavePath = StrSavePath & "\"
+End If
+StrSavePath = gEmailFolder
+
+
+Call GetFolder(Folders, EntryID, StoreID, ChosenFolder)
+
+For i = 1 To Folders.Count
+StrFolder = StripIllegalChar(Folders(i))
+n = InStr(3, StrFolder, "\") + 1
+StrFolder = Mid(StrFolder, n, 256)
+
+'StrFolderPath = StrSavePath & StrFolder & "\"
+StrFolderPath = gEmailFolder
+
+'StrSaveFolder = Left(StrFolderPath, Len(StrFolderPath) - 1) & "\"
+StrSaveFolder = gEmailFolder
+
+If Not FSO.FolderExists(StrFolderPath) Then
+FSO.CreateFolder (StrFolderPath)
+End If
+
+Set SubFolder = myOlApp.Session.GetFolderFromID(EntryID(i), StoreID(i))
+
+On Error Resume Next
+
+For j = 1 To SubFolder.Items.Count
+Set mItem = SubFolder.Items(j)
+StrReceived = ArrangedDate(mItem.ReceivedTime)
+StrTo = mItem.To
+StrSubject = mItem.Subject
+
+StrBody = mItem.Body
+
+gCreated = Mid(StrReceived, 1, 10) & " " & Mid(StrReceived, 15, 2) & ":" & Mid(StrReceived, 18, 2) & Mid(StrReceived, 12, 2)
+
+
+gETA_date = DateAdd("d", 7, CDate(gCreated))
+
+
+
+gReq_comments = "Sent: " & mItem.SentOn & Chr(13) & "From: " & mItem.SenderName & Chr(13) & "To: " & mItem.To & Chr(13) & "Cc: " & Chr(13) & mItem.CC & Chr(13) & _
+                "Subject: " & mItem.Subject & Chr(13) & Chr(13) & StrBody
+
+
+
+InsertIntoTicket
+
+GetTicketNo
+
+
+StrName = StripIllegalChar(StrSubject)
+StrFile = StrSaveFolder & StrName & "_" & StrReceived & ".msg"
+StrFile = Left(StrFile, 256)
+
+'gSubject = Mid(StrFile, 11, Len(StrFile) - 9)
+
+'gFilename = StrSaveFolder & StrSubject & ".msg"
+
+gSubject = Mid(StrFile, 82, Len(StrFile) - 81)
+
+'InsertIntoTicketFile
+
+
+'mItem.SaveAs StrFile, 3
+
+
+'mItem.SaveAs gFilename, 3
+
+mItem.Delete
+
+Next j
+On Error GoTo 0
+Next i
+
+ExitSub:
+
+End Sub
+
+Function StripIllegalChar(StrInput)
+
+Dim RegX As Object
+
+Set RegX = CreateObject("vbscript.regexp")
+
+RegX.Pattern = "[\" & Chr(34) & "\!\@\#\$\%\^\&\*\(\)\=\+\|\[\]\{\}\`\'\;\:\<\>\?\/\,]"
+RegX.IgnoreCase = True
+RegX.Global = True
+
+StripIllegalChar = RegX.Replace(StrInput, "")
+
+ExitFunction:
+
+Set RegX = Nothing
+
+End Function
+
+Function ArrangedDate(StrDateInput)
+
+Dim StrFullDate As String
+Dim StrFullTime As String
+Dim StrAMPM As String
+Dim StrTime As String
+Dim StrYear As String
+Dim StrMonthDay As String
+Dim StrMonth As String
+Dim StrDay As String
+Dim StrDate As String
+Dim StrDateTime As String
+Dim RegX As Object
+
+Set RegX = CreateObject("vbscript.regexp")
+
+If Not Left(StrDateInput, 2) = "10" And _
+Not Left(StrDateInput, 2) = "11" And _
+Not Left(StrDateInput, 2) = "12" Then
+StrDateInput = "0" & StrDateInput
+End If
+
+StrFullDate = Left(StrDateInput, 10)
+
+If Right(StrFullDate, 1) = " " Then
+StrFullDate = Left(StrDateInput, 9)
+End If
+
+StrFullTime = Replace(StrDateInput, StrFullDate & " ", "")
+
+If Len(StrFullTime) = 10 Then
+StrFullTime = "0" & StrFullTime
+End If
+
+StrAMPM = Right(StrFullTime, 2)
+StrTime = StrAMPM & "-" & Left(StrFullTime, 8)
+StrYear = Right(StrFullDate, 4)
+StrMonthDay = Replace(StrFullDate, "/" & StrYear, "")
+StrMonth = Left(StrMonthDay, 2)
+StrDay = Right(StrMonthDay, Len(StrMonthDay) - 3)
+If Len(StrDay) = 1 Then
+StrDay = "0" & StrDay
+End If
+StrDate = StrYear & "-" & StrMonth & "-" & StrDay
+StrDateTime = StrDate & "_" & StrTime
+RegX.Pattern = "[\:\/\ ]"
+RegX.IgnoreCase = True
+RegX.Global = True
+
+ArrangedDate = RegX.Replace(StrDateTime, "-")
+
+ExitFunction:
+
+Set RegX = Nothing
+
+End Function
+
+Sub GetFolder(Folders As Collection, EntryID As Collection, StoreID As Collection, Fld As MAPIFolder)
+
+Dim SubFolder As MAPIFolder
+
+Folders.Add Fld.FolderPath
+EntryID.Add Fld.EntryID
+StoreID.Add Fld.StoreID
+For Each SubFolder In Fld.Folders
+GetFolder Folders, EntryID, StoreID, SubFolder
+Next SubFolder
+
+ExitSub:
+
+Set SubFolder = Nothing
+
+End Sub
+
+Function BrowseForFolder(Optional OpenAt As String) As String
+
+Dim ShellApp As Object
+
+Set ShellApp = CreateObject("Shell.Application"). _
+BrowseForFolder(0, "Please choose a folder", 0, OpenAt)
+
+On Error Resume Next
+BrowseForFolder = ShellApp.self.Path
+On Error GoTo 0
+
+Select Case Mid(BrowseForFolder, 2, 1)
+Case Is = ":"
+If Left(BrowseForFolder, 1) = ":" Then
+BrowseForFolder = ""
+End If
+Case Is = "\"
+If Not Left(BrowseForFolder, 1) = "\" Then
+BrowseForFolder = ""
+End If
+Case Else
+BrowseForFolder = ""
+End Select
+
+ExitFunction:
+
+Set ShellApp = Nothing
+
+End Function
