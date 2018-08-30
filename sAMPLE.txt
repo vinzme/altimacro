@@ -1,0 +1,348 @@
+set nocount on
+
+select 
+prop.property_code [Property ID], 
+ps.property_status [Property Status], 
+replace(REPLACE(REPLACE(REPLACE(addr.address_1+' '+addr.address_2+', '+addr.city_name+', '+addr.state_short_name+','+addr.zip_code,CHAR(9), ' '),CHAR(10), ' '), CHAR(13),' '),'^', ' ') [Property Address],
+addr.city_name [City],
+addr.state [State],
+addr.state_short_name [Postal Code],
+addr.zip_code [Zip Code],
+
+Gas.org_name [Gas USP], 
+Gas.vendor_code [Gas Vendor ID],
+prop.vs_gas_meter_no [Gas Meter #],
+replace(REPLACE(REPLACE(REPLACE(Gas.account_number,CHAR(9), ' '),CHAR(10), ' '), CHAR(13),' '),'^', ' ') [Gas Account #],
+Gas.business_phone [Gas USP Contact], 
+GasStat.utility_status [Gas Status],
+convert(nvarchar(10),GasStat.last_update,101)  [Gas Last Update],
+GasWI.work_order_number [Gas Work Item #],
+convert(nvarchar(10),GasWI.work_order_date,101) [Gas Order Date],
+GasWI.wo_task [Gas Work Item],
+GasWI.work_order_status [Gas WI Status],
+replace(REPLACE(REPLACE(REPLACE(GasWICom.status_reason,CHAR(9), ' '),CHAR(10), ' '), CHAR(13),' '),'"', ' ') [Gas Status Reason], 
+convert(nvarchar(10),GasWICom.last_update,101) [Gas WI Status Date],
+convert(nvarchar(10),GasWI.work_item_type,101) [Gas WI Type],
+
+Elec.org_name [Elec USP], 
+Elec.vendor_code [Elec Vendor ID],
+prop.vs_electricity_meter_no [Elec Meter #],
+replace(REPLACE(REPLACE(REPLACE(Elec.account_number,CHAR(9), ' '),CHAR(10), ' '), CHAR(13),' '),'^', ' ') [Elec Account #],
+Elec.business_phone [Elec USP Contact], 
+ElecStat.utility_status [Elec Status],
+convert(nvarchar(10),ElecStat.last_update,101) [Elec Last Update],
+ElecWI.work_order_number [Elec Work Item #],
+convert(nvarchar(10),ElecWI.work_order_date,101) [Elec Order Date],
+ElecWI.wo_task [Elec Work Item],
+ElecWI.work_order_status [Elec WI Status],
+replace(REPLACE(REPLACE(REPLACE(ElecWICom.status_reason,CHAR(9), ' '),CHAR(10), ' '), CHAR(13),' '),'"', ' ') [Elec Status Reason],
+convert(nvarchar(10),ElecWICom.last_update,101) [Elec WI Status Date],
+convert(nvarchar(10),ElecWI.work_item_type,101) [Elec WI Type],
+
+replace(REPLACE(REPLACE(REPLACE(Water.org_name,CHAR(9), ' '),CHAR(10), ' '), CHAR(13),' '),'^', ' ') [Water USP],
+Water.vendor_code [Water Vendor ID],
+prop.vs_water_meter_no [Water Meter #],
+Water.account_number [Water Account #], 
+Water.business_phone [Water USP Contact], 
+WaterStat.utility_status [Water Status],
+convert(nvarchar(10),WaterStat.last_update,101)  [Water Last Update],
+WaterWI.work_order_number [Water Work Item #],
+convert(nvarchar(10),WaterWI.work_order_date,101) [Water Order Date],
+WaterWI.wo_task [Water Work Item],
+WaterWI.work_order_status [Water WI Status],
+REPLACE(REPLACE(REPLACE(WaterWICom.status_reason, CHAR(9), ''),CHAR(10), ''), CHAR(13),'') [Water Status Reason], 
+convert(nvarchar(10),WaterWICom.last_update,101) [Water WI Status Date],
+REPLACE(REPLACE(REPLACE(convert(nvarchar(10),WaterWI.work_item_type,101), CHAR(9), ''),CHAR(10), ''), CHAR(13),'') [Water WI Type],
+
+pod.pod_name [POD],
+convert(nvarchar(10),prop.pfc_date,101) [Foreclosure Date],
+REPLACE(REPLACE(REPLACE(lbx.lock_box_code, CHAR(9), ''),CHAR(10), ''), CHAR(13),'') [Lock Box Code], 
+prop.no_of_units [# of Units],
+org.vendor_code [Primary Vendor ID],
+REPLACE(REPLACE(REPLACE(org.org_name, CHAR(9), ''),CHAR(10), ''), CHAR(13),'') [Primary Vendor],
+org.first_name+' '+org.last_name [Primary VDR Contact],
+org.business_phone [Primary VDR Business Phone],
+org.mobile_phone [Primary VDR Mobile],
+org.after_off_hrs_phone [Primary VDR 24 Hrs. Emerg. Contact],
+prop.borrower [Borrower],
+
+GasWI2.work_order_number [2nd Gas Work Item #],
+convert(nvarchar(10),GasWI2.work_order_date,101) [2nd Gas Order Date],
+GasWI2.wo_task [2nd Gas Line Item],
+REPLACE(REPLACE(REPLACE(GasWI2.work_order_status,CHAR(9), ' '),CHAR(10), ' '), CHAR(13),' ') [2nd Gas WI Status],
+replace(REPLACE(REPLACE(REPLACE(GasWICom2.status_reason,CHAR(9), ' '),CHAR(10), ' '), CHAR(13),' '),'"', ' ') [2nd Gas Status Reason],
+convert(nvarchar(10),GasWICom2.last_update,101) [2nd Gas WI Status Date],
+convert(nvarchar(10),GasWI2.work_item_type,101) [2nd Gas WI Type],
+
+ElecWI2.work_order_number [2nd Elec Work Item #],
+convert(nvarchar(10),ElecWI2.work_order_date,101) [2nd Elec Order Date],
+REPLACE(REPLACE(REPLACE(ElecWI2.wo_task, CHAR(9), ''),CHAR(10), ''), CHAR(13),'') [2nd Elec Work Item], 
+ElecWI2.work_order_status [2nd Elec WI Status],
+replace(REPLACE(REPLACE(REPLACE(ElecWICom2.status_reason,CHAR(9), ' '),CHAR(10), ' '), CHAR(13),' '),'"', ' ') [2nd Elec Status Reason], 
+convert(nvarchar(10),ElecWICom2.last_update,101) [2nd Elec WI Status Date],
+REPLACE(REPLACE(REPLACE(convert(nvarchar(10),ElecWI2.work_item_type,101), CHAR(9), ''),CHAR(10), ''), CHAR(13),'') [2nd Elec WI Type], 
+
+WaterWI2.work_order_number [2nd Water Work Item #],
+convert(nvarchar(10),WaterWI2.work_order_date,101) [2nd Water Order Date],
+WaterWI2.wo_task [2nd Water Work Item],
+WaterWI2.work_order_status [2nd Water WI Status],
+REPLACE(REPLACE(REPLACE(WaterWICom2.status_reason, CHAR(9), ' '),CHAR(10), ' '), CHAR(13),' ') [2nd Water Status Reason], 
+REPLACE(REPLACE(REPLACE(convert(nvarchar(10),WaterWICom2.last_update,101), CHAR(9), ''),CHAR(10), ''), CHAR(13),'') [2nd Water WI Status Date], 
+REPLACE(REPLACE(REPLACE(convert(nvarchar(10),WaterWI2.work_item_type,101), CHAR(9), ''),CHAR(10), ''), CHAR(13),'') [2nd Water WI Type], 
+REPLACE(REPLACE(REPLACE(rpt.property_type_code, CHAR(9), ''),CHAR(10), ''), CHAR(13),'') [Property Type],
+rin.investor_code[Investor Code],
+REPLACE(REPLACE(REPLACE(rin.investor_name, CHAR(9), ''),CHAR(10), ''), CHAR(13),'') [Investor Name], 
+
+REPLACE(REPLACE(REPLACE(ELastData.utility_status, CHAR(9), ''),CHAR(10), ''), CHAR(13),'') [Elec Prev Status], 
+ELastData.last_update [Elec Prev Date],
+REPLACE(REPLACE(REPLACE(ELastData.username, CHAR(9), ''),CHAR(10), ''), CHAR(13),'') [Elec Prev User], 
+GLastData.utility_status [Gas Prev Status],
+REPLACE(REPLACE(REPLACE(GLastData.last_update, CHAR(9), ''),CHAR(10), ''), CHAR(13),'') [Gas Prev Date], 
+GLastData.username [Gas Prev User],
+REPLACE(REPLACE(REPLACE(WLastData.utility_status, CHAR(9), ''),CHAR(10), ''), CHAR(13),'') [Water Prev Status], 
+WLastData.last_update [Water Prev Date],
+REPLACE(REPLACE(REPLACE(WLastData.username, CHAR(9), ''),CHAR(10), ''), CHAR(13),'') [Water Prev User] 
+
+from ref_property prop(nolock)
+join ref_property_status ps (nolock) on ps.property_status_id=prop.property_status_id 
+join vw_address addr (nolock) on addr.address_id=prop.address_id
+join ref_pod pod (nolock) on prop.pod_id=pod.pod_id
+join vw_property_info lbx (nolock) on lbx.property_id=prop.property_id
+join ref_organization org (nolock) on prop.vendor_id=org.id_org
+join ref_property_type rpt(nolock) on prop.property_type_id=rpt.property_type_id
+join ref_investor rin(nolock) on prop.investor_id=rin.investor_id
+
+outer apply(select top 1 ush.[last_update] from utility_status_history ush (nolock)
+	join property_vendor_mapping pvm (nolock) on pvm.property_id=prop.Property_Id and pvm.vendor_mapping_id=ush.vendor_mapping_id and pvm.vendor_group_id=5
+where ush.vendor_mapping_id=pvm.vendor_mapping_id and ush.utility_status_id=13 order by ush.utility_status_history_id asc) Edate
+outer apply(select top 1 ush.[last_update], usr.username, usts.utility_status from utility_status_history ush (nolock)
+left join ref_users usr (nolock) on usr.sno=ush.last_changed_by_login_id
+left join ref_utility_status usts (nolock) on usts.utility_status_id=ush.utility_status_id
+join property_vendor_mapping pvm (nolock) on pvm.property_id=prop.Property_Id and pvm.vendor_mapping_id=ush.vendor_mapping_id and pvm.vendor_group_id=5
+where ush.vendor_mapping_id=pvm.vendor_mapping_id  and ush.[last_update] < Edate.last_update order by ush.utility_status_history_id desc) ELastData
+
+outer apply(select top 1 ush.[last_update] from utility_status_history ush (nolock)
+	join property_vendor_mapping pvm (nolock) on pvm.property_id=prop.Property_Id and pvm.vendor_mapping_id=ush.vendor_mapping_id and pvm.vendor_group_id=4
+where ush.vendor_mapping_id=pvm.vendor_mapping_id and ush.utility_status_id=13 order by ush.utility_status_history_id asc) Gdate
+outer apply(select top 1 ush.[last_update], usr.username, usts.utility_status from utility_status_history ush (nolock)
+left join ref_users usr (nolock) on usr.sno=ush.last_changed_by_login_id
+left join ref_utility_status usts (nolock) on usts.utility_status_id=ush.utility_status_id
+join property_vendor_mapping pvm (nolock) on pvm.property_id=prop.Property_Id and pvm.vendor_mapping_id=ush.vendor_mapping_id and pvm.vendor_group_id=4
+where ush.vendor_mapping_id=pvm.vendor_mapping_id  and ush.[last_update] < Gdate.last_update order by ush.utility_status_history_id desc) GLastData
+
+outer apply(select top 1 ush.[last_update] from utility_status_history ush (nolock)
+	join property_vendor_mapping pvm (nolock) on pvm.property_id=prop.Property_Id and pvm.vendor_mapping_id=ush.vendor_mapping_id and pvm.vendor_group_id=6
+where ush.vendor_mapping_id=pvm.vendor_mapping_id and ush.utility_status_id=13 order by ush.utility_status_history_id asc) Wdate
+outer apply(select top 1 ush.[last_update], usr.username, usts.utility_status from utility_status_history ush (nolock)
+left join ref_users usr (nolock) on usr.sno=ush.last_changed_by_login_id
+left join ref_utility_status usts (nolock) on usts.utility_status_id=ush.utility_status_id
+join property_vendor_mapping pvm (nolock) on pvm.property_id=prop.Property_Id and pvm.vendor_mapping_id=ush.vendor_mapping_id and pvm.vendor_group_id=6
+where ush.vendor_mapping_id=pvm.vendor_mapping_id  and ush.[last_update] < Wdate.last_update order by ush.utility_status_history_id desc) WLastData
+
+
+outer apply (select org.vendor_code, 
+			org.id_org, 
+			org.org_name, 
+			org.business_phone,
+			pvm.account_number
+			from ref_organization org (nolock)
+			join property_vendor_mapping pvm (nolock) on pvm.id_org=org.id_org 
+			where prop.Property_Id=pvm.property_Id and pvm.vendor_group_id=4)Gas
+
+outer apply (select top 1 ush.utility_status_id, us.utility_status, ush.last_update from utility_status_history ush (nolock)
+			join property_vendor_mapping pvm (nolock) on pvm.property_id=prop.Property_Id 
+			and pvm.vendor_mapping_id=ush.vendor_mapping_id and pvm.vendor_group_id=4
+			join ref_utility_status us (nolock) on us.utility_status_id=ush.utility_status_id
+			order by ush.last_update desc)GasStat	
+			
+outer apply (select top 1 
+			wo.work_order_number, 
+			wo.work_order_id, 
+			wo.work_order_status_id,
+			wo.wo_task, 
+			wos.work_order_status,
+			wo.work_order_date,
+			pvm.property_id, 
+			wt.work_item_type 
+			from work_order wo (nolock)
+			join property_vendor_mapping pvm (nolock) 
+			on pvm.property_id=wo.property_id and pvm.property_id=prop.property_id and pvm.vendor_group_id=4 
+			join ref_work_order_status wos (nolock) on wo.work_order_status_id=wos.work_order_status_id
+			join ref_work_item_type wt (nolock) on wt.work_item_type_id=wo.work_item_type_id
+			where ((pvm.utility_status_id in (12,31,32,33) and wo.wo_task_id in ('7250','6934','6486','7488','5940','2895','7289'))  
+			or (pvm.utility_status_id in (8,34,35,36) and wo.wo_task_id in ('6805','6497','5936'))
+			or (pvm.utility_status_id=2 and wo.wo_task_id in ('5790','6503','6643'))
+			or (pvm.utility_status_id in (5,18,19,20,21) and wo.wo_task_id in ('7255','7256','6804','6806','6495','6496','5925','5926','7285','7293')))
+			order by wo.work_order_id desc)GasWI
+
+outer apply (select top 1 
+			wo.work_order_number, 
+			wo.work_order_id, 
+			wo.work_order_status_id,
+			wo.wo_task, 
+			wos.work_order_status,
+			wo.work_order_date,
+			pvm.property_id, 
+			wt.work_item_type 
+			from work_order wo (nolock)
+			join property_vendor_mapping pvm (nolock) 
+			on pvm.property_id=wo.property_id and pvm.property_id=prop.property_id and pvm.vendor_group_id=4 
+			join ref_work_order_status wos (nolock) on wo.work_order_status_id=wos.work_order_status_id
+			join ref_work_item_type wt (nolock) on wt.work_item_type_id=wo.work_item_type_id
+			where gaswi.work_order_id<>wo.work_order_id and ((pvm.utility_status_id in (12,31,32,33) and wo.wo_task_id in ('7250','6934','6486','7488','5940','2895','7289'))  
+			or (pvm.utility_status_id in (8,34,35,36) and wo.wo_task_id in ('6805','6497','5936'))
+			or (pvm.utility_status_id=2 and wo.wo_task_id in ('5790','6503','6643'))
+			or (pvm.utility_status_id in (5,18,19,20,21) and wo.wo_task_id in ('7255','7256','6804','6806','6495','6496','5925','5926','7285','7293')))
+			order by wo.work_order_id desc)GasWI2
+			
+outer apply (select top 1 woh.status_reason, woh.last_update
+			from work_order_history woh (nolock)
+			where woh.work_order_id=GasWI.work_order_id and woh.status_id=GasWI.work_order_status_id
+			order by woh.last_update desc)GasWICom
+			
+outer apply (select top 1 woh.status_reason, woh.last_update
+			from work_order_history woh (nolock)
+			where woh.work_order_id=GasWI2.work_order_id and woh.status_id=GasWI2.work_order_status_id
+			order by woh.last_update desc)GasWICom2
+						
+outer apply (select org.vendor_code, 
+			org.id_org, 
+			org.org_name, 
+			org.business_phone,
+			pvm.account_number
+			from ref_organization org (nolock)
+			join property_vendor_mapping pvm (nolock) on pvm.id_org=org.id_org 
+			where prop.Property_Id=pvm.property_Id and pvm.vendor_group_id=5)Elec
+
+outer apply (select top 1 ush.utility_status_id, us.utility_status, ush.last_update from utility_status_history ush (nolock)
+			join property_vendor_mapping pvm (nolock) on pvm.property_id=prop.Property_Id 
+			and pvm.vendor_mapping_id=ush.vendor_mapping_id and pvm.vendor_group_id=5
+			join ref_utility_status us (nolock) on us.utility_status_id=ush.utility_status_id
+			order by ush.last_update desc)ElecStat				
+
+outer apply (select top 1 
+			wo.work_order_number, 
+			wo.work_order_id, 
+			wo.work_order_status_id,
+			wo.wo_task, 
+			wos.work_order_status,
+			wo.work_order_date,
+			pvm.property_id, 
+			wt.work_item_type 
+			from work_order wo (nolock)
+			join property_vendor_mapping pvm (nolock) 
+			on pvm.property_id=wo.property_id and pvm.property_id=prop.property_id and pvm.vendor_group_id=5 
+			join ref_work_order_status wos (nolock) on wo.work_order_status_id=wos.work_order_status_id
+			join ref_work_item_type wt (nolock) on wt.work_item_type_id=wo.work_item_type_id
+			where ((pvm.utility_status_id in (31) and wo.wo_task_id in ('2893','6685','7487','2906','6884'))  
+			or (pvm.utility_status_id in (32) and wo.wo_task_id in ('5938','6488','6799'))
+			or (pvm.utility_status_id in (25) and wo.wo_task_id in ('1523','6611','6822','1945','6865','6910','3570','6574','6877'))
+			or (pvm.utility_status_id in (18,19) and wo.wo_task_id in ('5924','6492','6802','5923','6493','6801','7554','7833'))
+			or (pvm.utility_status_id in (34) and wo.wo_task_id in ('9197','9190','9193'))
+			or (pvm.utility_status_id in (2) and wo.wo_task_id in ('5790','6503','6643')))
+			order by wo.work_order_id desc) ElecWI
+
+outer apply (select top 1 
+			wo.work_order_number, 
+			wo.work_order_id, 
+			wo.work_order_status_id,
+			wo.wo_task, 
+			wos.work_order_status,
+			wo.work_order_date,
+			pvm.property_id, 
+			wt.work_item_type 
+			from work_order wo (nolock)
+			join property_vendor_mapping pvm (nolock) 
+			on pvm.property_id=wo.property_id and pvm.property_id=prop.property_id and pvm.vendor_group_id=5 
+			join ref_work_order_status wos (nolock) on wo.work_order_status_id=wos.work_order_status_id
+			join ref_work_item_type wt (nolock) on wt.work_item_type_id=wo.work_item_type_id
+			where elecwi.work_order_id=wo.work_order_id and ((pvm.utility_status_id in (31) and wo.wo_task_id in ('2893','6685','7487','2906','6884'))  
+			or (pvm.utility_status_id in (32) and wo.wo_task_id in ('5938','6488','6799'))
+			or (pvm.utility_status_id in (25) and wo.wo_task_id in ('1523','6611','6822','1945','6865','6910','3570','6574','6877'))
+			or (pvm.utility_status_id in (18,19) and wo.wo_task_id in ('5924','6492','6802','5923','6493','6801','7554','7833'))
+			or (pvm.utility_status_id in (34) and wo.wo_task_id in ('9197','9190','9193'))
+			or (pvm.utility_status_id in (2) and wo.wo_task_id in ('5790','6503','6643')))
+			order by wo.work_order_id desc) ElecWI2
+
+outer apply (select top 1 woh.status_reason, woh.last_update
+			from work_order_history woh (nolock)
+			where woh.work_order_id=ElecWI.work_order_id and woh.status_id=ElecWI.work_order_status_id
+			order by woh.last_update desc)ElecWICom
+
+outer apply (select top 1 woh.status_reason, woh.last_update
+			from work_order_history woh (nolock)
+			where woh.work_order_id=ElecWI2.work_order_id and woh.status_id=ElecWI2.work_order_status_id
+			order by woh.last_update desc)ElecWICom2
+						
+outer apply (select org.vendor_code, 
+			org.id_org, 
+			org.org_name, 
+			org.business_phone,
+			pvm.account_number
+			from ref_organization org (nolock)
+			join property_vendor_mapping pvm (nolock) on pvm.id_org=org.id_org 
+			where prop.Property_Id=pvm.property_Id and pvm.vendor_group_id=6)Water
+			
+outer apply (select top 1 ush.utility_status_id, us.utility_status, ush.last_update from utility_status_history ush (nolock)
+			join property_vendor_mapping pvm (nolock) on pvm.property_id=prop.Property_Id 
+			and pvm.vendor_mapping_id=ush.vendor_mapping_id and pvm.vendor_group_id=6
+			join ref_utility_status us (nolock) on us.utility_status_id=ush.utility_status_id
+			order by ush.last_update desc)WaterStat	
+
+outer apply (select top 1 
+			wo.work_order_number, 
+			wo.work_order_id, 
+			wo.work_order_status_id,
+			wo.wo_task, 
+			wos.work_order_status,
+			wo.work_order_date,
+			pvm.property_id, 
+			wt.work_item_type   
+			from work_order wo (nolock)
+			join property_vendor_mapping pvm (nolock) 
+			on pvm.property_id=wo.property_id and pvm.property_id=prop.property_id and pvm.vendor_group_id=6 
+			join ref_work_order_status wos (nolock) on wo.work_order_status_id=wos.work_order_status_id
+			join ref_work_item_type wt (nolock) on wt.work_item_type_id=wo.work_item_type_id
+			where ((pvm.utility_status_id in (31) and wo.wo_task_id in ('2900','6556','6912','2906','6884'))  
+			or (pvm.utility_status_id in (32) and wo.wo_task_id in ('5939','6489','6800'))
+			or (pvm.utility_status_id in (25) and wo.wo_task_id in ('4501','6605','6779','1945','6865','6910','3570','6574','6877'))
+			or (pvm.utility_status_id in (18,19) and wo.wo_task_id in ('5929','6498','6808','5930','6500','6810','7560','7837'))
+			or (pvm.utility_status_id in (34) and wo.wo_task_id in ('9196','9192','9195'))
+			or (pvm.utility_status_id in (2) and wo.wo_task_id in ('5790','6503','6643')))
+			order by wo.work_order_id desc) WaterWI
+
+outer apply (select top 1 
+			wo.work_order_number, 
+			wo.work_order_id, 
+			wo.work_order_status_id,
+			wo.wo_task, 
+			wos.work_order_status,
+			wo.work_order_date,
+			pvm.property_id, 
+			wt.work_item_type   
+			from work_order wo (nolock)
+			join property_vendor_mapping pvm (nolock) 
+			on pvm.property_id=wo.property_id and pvm.property_id=prop.property_id and pvm.vendor_group_id=6 
+			join ref_work_order_status wos (nolock) on wo.work_order_status_id=wos.work_order_status_id
+			join ref_work_item_type wt (nolock) on wt.work_item_type_id=wo.work_item_type_id
+			where WaterWI.work_order_id<>wo.work_order_id and ((pvm.utility_status_id in (31) and wo.wo_task_id in ('2900','6556','6912','2906','6884'))  
+			or (pvm.utility_status_id in (32) and wo.wo_task_id in ('5939','6489','6800'))
+			or (pvm.utility_status_id in (25) and wo.wo_task_id in ('4501','6605','6779','1945','6865','6910','3570','6574','6877'))
+			or (pvm.utility_status_id in (18,19) and wo.wo_task_id in ('5929','6498','6808','5930','6500','6810','7560','7837'))
+			or (pvm.utility_status_id in (34) and wo.wo_task_id in ('9196','9192','9195'))
+			or (pvm.utility_status_id in (2) and wo.wo_task_id in ('5790','6503','6643')))
+			order by wo.work_order_id desc) WaterWI2
+			
+outer apply (select top 1 woh.status_reason, woh.last_update
+			from work_order_history woh (nolock)
+			where woh.work_order_id=WaterWI.work_order_id and woh.status_id=WaterWI.work_order_status_id
+			order by woh.last_update desc)WaterWICom
+
+outer apply (select top 1 woh.status_reason, woh.last_update
+			from work_order_history woh (nolock)
+			where woh.work_order_id=WaterWI2.work_order_id and woh.status_id=WaterWI2.work_order_status_id
+			order by woh.last_update desc)WaterWICom2
+			
+where prop.is_active=1 --and ElecStat.utility_status_id in (2) --and prop.property_code='71307223951'
+and prop.customer_id=2 and prop.property_status_id in (128) and prop.portfolio_code not in ('CD53')
+

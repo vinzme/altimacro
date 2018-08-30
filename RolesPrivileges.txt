@@ -1,0 +1,176 @@
+USE [UAM]
+GO
+/****** Object:  StoredProcedure [dbo].[sp_proc_UpdateRolePrivileges]    Script Date: 8/30/2018 1:46:02 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER PROCEDURE [dbo].[sp_proc_UpdateRolePrivileges] 
+as  
+
+begin  
+
+/* Delete records from temporary tables */
+/* Delete from dbo.Roles_Privileges_temp0_new */
+Delete from dbo.Roles_Privileges_temp1
+Delete from dbo.Roles_Privileges_temp2
+Delete from dbo.Roles_Privileges_temp3
+
+
+/* Get Data from Production  
+Begin
+with RolesPrivileges as 
+(
+select 
+menu_id [role_id],
+menu_name [module],
+'' [menu],
+'' [tab],
+'' [field],
+view_rights [view_rights],
+add_rights [add_rights],
+edit_rights [edit_rights],
+delete_rights [delete_rights],
+export_rights [export_rights],
+print_rights [print_rights]
+ 
+from NAV12SQVMSMP04.FPREOPRO.dbo.ref_menu with (nolock)
+where is_active=1 and parent_id is null and popup_parent_id is null and menu_type=1
+
+
+union all
+
+select
+menu.menu_id [role_id],
+module.menu_name [module],
+menu.menu_name [menu],
+'' [tab],
+'' [field],
+menu.view_rights [view_rights],
+menu.add_rights [add_rights],
+menu.edit_rights [edit_rights],
+menu.delete_rights [delete_rights],
+menu.export_rights [export_rights],
+menu.print_rights [print_rights]
+ 
+from NAV12SQVMSMP04.FPREOPRO.dbo.ref_menu menu with (nolock)
+join NAV12SQVMSMP04.FPREOPRO.dbo.ref_menu module with (nolock) on (menu.parent_id=module.menu_id or menu.popup_parent_id=module.menu_id)
+								and menu.menu_type in (1,2) and menu.is_active=1 
+where module.menu_type in (1,2) and module.is_active=1 and module.parent_id is null and module.popup_parent_id is null 
+
+union all
+
+select
+tab.menu_id [role_id],
+module.menu_name [module],
+menu.menu_name [menu],
+tab.menu_name [tab],
+'' [field],
+tab.view_rights [view_rights],
+tab.add_rights [add_rights],
+tab.edit_rights [edit_rights],
+tab.delete_rights [delete_rights],
+tab.export_rights [export_rights],
+tab.print_rights [print_rights]
+ 
+from NAV12SQVMSMP04.FPREOPRO.dbo.ref_menu tab with (nolock) 
+join NAV12SQVMSMP04.FPREOPRO.dbo.ref_menu menu with (nolock) on (tab.parent_id=menu.menu_id or tab.popup_parent_id=menu.menu_id)
+							and tab.menu_type in (1,2) and tab.is_active=1 
+join NAV12SQVMSMP04.FPREOPRO.dbo.ref_menu module with (nolock) on (menu.parent_id=module.menu_id or menu.popup_parent_id=module.menu_id)
+								and menu.menu_type in (1,2) and menu.is_active=1 
+where module.menu_type in (1,2) and module.is_active=1 and module.parent_id is null and module.popup_parent_id is null 
+
+union all
+
+select
+tab.menu_id [role_id],
+module.menu_name [module],
+menu.menu_name [menu],
+tab.menu_name [tab],
+field.menu_name [field],
+tab.view_rights [view_rights],
+tab.add_rights [add_rights],
+tab.edit_rights [edit_rights],
+tab.delete_rights [delete_rights],
+tab.export_rights [export_rights],
+tab.print_rights [print_rights]
+ 
+from NAV12SQVMSMP04.FPREOPRO.dbo.ref_menu field with (nolock)
+join NAV12SQVMSMP04.FPREOPRO.dbo.ref_menu tab with (nolock) on (field.popup_parent_id=tab.menu_id or field.parent_id=tab.menu_id)
+								and field.menu_type in (1,2) and field.is_active=1 
+join NAV12SQVMSMP04.FPREOPRO.dbo.ref_menu menu with (nolock) on (tab.popup_parent_id=menu.menu_id or tab.parent_id=menu.menu_id)
+								and tab.menu_type in (1,2) and tab.is_active=1 
+join NAV12SQVMSMP04.FPREOPRO.dbo.ref_menu module with (nolock) on (menu.popup_parent_id=module.menu_id or menu.parent_id=module.menu_id)
+								and menu.menu_type in (1,2)  and menu.is_active=1 
+where module.menu_type in (1,2) and module.is_active=1 
+
+), DistRolesPrivileges as ( select distinct * from RolesPrivileges )
+
+
+--select * from DistRolesPrivileges order by 2,3,4
+insert into dbo.Roles_Privileges_temp0_new
+select RefRole.id_role, RefRole.role_name, RnP.module, RnP.menu, RnP.tab, RnP.field, 
+case when RnP.view_rights=1 or RnP.view_rights is null then case when RoleAccess.view_access=1 then 'Yes' Else 'No' end else 'N/A' end [View Rights],
+case when RnP.add_rights=1 or RnP.add_rights is null then case when RoleAccess.add_access=1 then 'Yes' Else 'No' end else 'N/A' end [Add Rights],
+case when RnP.edit_rights=1 or RnP.edit_rights is null then case when RoleAccess.edit_access=1 then 'Yes' Else 'No' end else 'N/A' end [Edit Rights],
+case when RnP.delete_rights=1 or RnP.delete_rights is null then case when RoleAccess.delete_access=1 then 'Yes' Else 'No' end else 'N/A' end [Delete Rights],
+case when RnP.export_rights=1 or RnP.export_rights is null then case when RoleAccess.export_access=1 then 'Yes' Else 'No' end else 'N/A' end [Export Rights],
+case when RnP.print_rights=1 or RnP.print_rights is null then case when RoleAccess.print_access=1 then 'Yes' Else 'No' end else 'N/A' end [Print Rights],
+users.username, RoleAccess.modified_date from NAV12SQVMSMP04.FPREOPRO.dbo.ref_role RefRole with (nolock)
+join NAV12SQVMSMP04.FPREOPRO.dbo.ums_role_access RoleAccess with (nolock) on RoleAccess.id_role=RefRole.id_role and RefRole.is_active=1 
+join DistRolesPrivileges RnP with (nolock) on RoleAccess.scr_function_id=RnP.role_id
+join NAV12SQVMSMP04.FPREOPRO.dbo.ref_users users with (nolock) on RoleAccess.modified_by=users.sno
+where RefRole.id_role<>1 order by 1,2,3,4,5,6 desc
+
+End */
+if exists(select top 1 NULL from dbo.Roles_Privileges_temp0_new) 
+begin
+
+
+/* Update records with Blank or null values  */
+update dbo.Roles_Privileges_temp0_new set menu = 'NULL' where menu = ''
+update dbo.Roles_Privileges_temp0_new set tab = 'NULL' where tab = ''
+update dbo.Roles_Privileges_temp0_new set field = 'NULL' where field = ''
+
+
+/* Compare previous versus current */
+insert into dbo.Roles_Privileges_temp1
+SELECT id_role, role_name, module, menu,tab,field,view_rights,add_rights,edit_rights,delete_rights,export_rights,
+print_rights from dbo.Roles_Privileges_temp0_new
+except
+SELECT id_role, role_name, module, menu,tab,field,view_rights,add_rights,edit_rights,delete_rights,export_rights,
+print_rights from dbo.Roles_Privileges_temp0
+
+/* Compare temp table with previous table */
+insert into dbo.Roles_Privileges_temp2
+SELECT a.id_role, a.role_name, a.module, a.menu, a.tab, a.field, a.view_rights, a.add_rights, a.edit_rights, 
+a.delete_rights, a.export_rights, a.print_rights, b.username, b.modified_date, '                    ' AS Indicator
+FROM dbo.Roles_Privileges_temp1 a LEFT JOIN dbo.Roles_Privileges_temp0 b ON a.id_role = b.id_role AND
+a.role_name = b.role_name AND a.module = b.module AND a.menu = b.menu AND a.tab = b.tab AND a.field = b.field
+
+/* Update records that are newley added */
+UPDATE dbo.Roles_Privileges_temp2 SET Indicator = 'Added' WHERE username Is Null
+
+/* Get username and modified_date from current table */
+insert into dbo.Roles_Privileges_temp3
+SELECT a.id_role, a.role_name, a.module, a.menu, a.tab, a.field, a.view_rights, a.add_rights, a.edit_rights, a.delete_rights, 
+a.export_rights, a.print_rights, b.username, b.modified_date, a.Indicator FROM dbo.Roles_Privileges_temp2 a INNER JOIN 
+dbo.Roles_Privileges_temp0_new b ON a.id_role = b.id_role AND a.role_name = b.role_name AND a.module = b.module AND 
+a.menu = b.menu AND a.tab = b.tab AND a.field = b.field
+
+/* Update records that are  */
+UPDATE dbo.Roles_Privileges_temp3 SET Indicator = 'Modified' WHERE Indicator <> 'Added'
+
+/* Insert into Roles and Privileges History table  */
+insert into dbo.Roles_Privileges select * from dbo.Roles_Privileges_temp3
+
+/* Delete from previous table */
+delete from dbo.Roles_Privileges_temp0
+
+/* Insert current to previous */
+insert into dbo.Roles_Privileges_temp0 select * from dbo.Roles_Privileges_temp0_new
+
+Delete from dbo.Roles_Privileges_temp0_new
+
+end
+end

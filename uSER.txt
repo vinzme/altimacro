@@ -1,0 +1,450 @@
+USE [UAM]
+GO
+/****** Object:  StoredProcedure [dbo].[sp_proc_UpdateAccount]    Script Date: 8/30/2018 1:47:40 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER PROCEDURE [dbo].[sp_proc_UpdateAccount] 
+as  
+
+begin  
+
+/* Delete records from temporary tables */
+
+Delete from dbo.User_Account_Temp 
+
+Delete from dbo.User_Account_Current_temp
+Delete from dbo.User_Account_Ticket_temp
+Delete from dbo.Account_History_temp
+
+
+if exists(select top 1 NULL from dbo.tmp_uam_details)
+begin
+
+/*Account - Step 2 */
+insert into dbo.User_Account_Temp(UserID,UserName,Designation,Department,SNO,Email,Active,ViewVendorInfo,ViewAllProperties,Dollar,PublicAccess,CreatedDate,LastUpdate,accountupdatedby) 
+select UserID,UserName,Designation,Department,SNO,email,Active,ViewVendorInfo,ViewAllProperties,Dollar,PublicAccess,CreatedDate,LastUpdate,AccountUpdatedBy from dbo.tmp_uam_details
+
+/* select users.username as UserID, 
+users.first_name+' '+users.last_name as UserName,
+desi.designation as Designation, 
+COALESCE(depart.department_name, 'NULL') as Department,
+users.sno as SNO,luser.email,
+case when users.is_active=1 then 'Yes' else 'No' end as Active,
+case when users.view_vendor_info=1 then 'Yes' else 'No' end as ViewVendorInfo,
+case when users.view_property_all=1 then 'Yes' else 'No'end as ViewAllProperties,
+Case when users.view_dollar_info=1 then 'Yes' else 'No' end as Dollar,
+Case when users.public_access=1 then 'Yes' else 'No' end as PublicAccess,
+CONVERT(VARCHAR(19),users.created_date,120) as CreatedDate,
+CONVERT(VARCHAR(19),users.last_update,120) as LastUpdate,
+cuser.username as AccountUpdatedBy 
+from NAV12SQVMSMP04.FPREOPRO.dbo.ref_users users with (nolock)
+join NAV12SQVMSMP04.FPREOPRO.dbo.ref_users cuser with (nolock) on users.last_changed_by_login_id=cuser.sno
+join NAV12SQVMSMP04.FPREOPRO.dbo.login_user_details luser with (nolock) on users.sno = luser.login_id
+left join NAV12SQVMSMP04.FPREOPRO.dbo.ref_designation desi with (nolock) on users.designation_id=desi.designation_id
+left join NAV12SQVMSMP04.FPREOPRO.dbo.ref_department depart with (nolock) on depart.department_id=users.department_id
+where users.designation_id <> 7 and users.created_date is not null */ 
+
+/* Update RunDate*/
+update dbo.User_Account_Temp set RunDate = (SELECT GETDATE() AS Date)
+
+
+/* Get latest record for supervisor update */
+declare @User_Account_Deleted_Temp  table (UserID varchar(100),Ttype varchar(20))
+
+
+/* Update Supervisor field */
+UPDATE A SET A.Supervisor = B.manager_id FROM dbo.User_Account_Temp A INNER JOIN dbo.tmp_tech_details B 
+ON A.SNO = B.login_id 
+
+UPDATE A SET A.Supervisor = B.UserID FROM dbo.User_Account_Temp A INNER JOIN dbo.User_Account_Current B 
+ON A.Supervisor = B.SNO
+
+UPDATE dbo.User_Account_Temp SET Supervisor = '' where Supervisor is null
+
+
+
+/* DECLARE @tmp_SNO TABLE (sno INT)
+DECLARE @tmpSUPER TABLE (sno int, manager_id int)
+DECLARE @tmpSUPER2 TABLE (sno int, supervisor varchar(50))
+DECLARE @tmpSUPER3 TABLE (userid varchar(50), supervisor varchar(50))
+DECLARE @tmpSUPER4 TABLE (userid varchar(50), supervisor varchar(50))
+
+INSERT INTO @tmp_SNO (sno)
+Select SNO from dbo.User_Account_Temp where LastUpdate > convert(varchar(19),DATEADD(day,-5,GETDATE()),120)
+
+INSERT INTO @tmpSUPER (sno,manager_id)
+Select login_id, manager_id from NAV12SQVMSMP04.FPREOPRO.dbo.tech_details with (nolock) where login_id in(Select sno from @tmp_SNO)
+
+INSERT INTO @tmpSUPER2(sno,supervisor)
+Select a.SNO, b.UserID FROM @tmpSUPER a inner join dbo.User_Account_Temp b on a.manager_id = b.SNO
+
+INSERT INTO @tmpSUPER3(userid,supervisor)
+Select a.UserID, b.supervisor from dbo.User_Account_Current a inner join @tmpSUPER2 b on a.SNO = b.sno
+
+INSERT INTO @tmpSUPER4(userid,supervisor)
+Select UserID, Supervisor from dbo.User_Account_Current where UserID in(Select UserID from @tmpSUPER3)
+
+insert into @User_Account_Deleted_Temp(UserID,Ttype) 
+Select a.userid, 'Supervisor' as Ttype from @tmpSUPER4 a LEFT JOIN @tmpSUPER3 b 
+on (a.userid = b.userid) AND (a.supervisor = b.supervisor) WHERE (((b.supervisor) Is Null))
+
+/* Update dbo.User_Account_Temp  */
+UPDATE A SET A.Supervisor = B.supervisor FROM dbo.User_Account_Temp A INNER JOIN @tmpSUPER3 B ON A.UserID = B.userid
+
+insert into dbo.Account_History_temp(UserID,UserName,Designation,Department,Active,ViewVendorInfo,ViewAllProperties,Dollar,PublicAccess,
+CreatedDate,LastUpdate,accountupdatedby,RunDate,Field_Change,Supervisor,Email)
+Select UserID,UserName,Designation,Department,Active,ViewVendorInfo,ViewAllProperties,Dollar,PublicAccess,CreatedDate,
+LastUpdate,accountupdatedby,RunDate,'Supervisor' as Field_Change,Supervisor,Email 
+from dbo.User_Account_Temp where UserID in(Select UserID from @User_Account_Deleted_Temp where Ttype = 'Supervisor')
+
+/* Supervisor - End */ 
+*/
+
+DECLARE @userid varchar(50)
+DECLARE @ticketid int
+
+DECLARE @TEMP TABLE (userid varchar(50))
+DECLARE @TEMP2 TABLE (userid varchar(50))
+
+-- Insert into the temporary table a list of records to be added
+INSERT INTO @TEMP (userid)
+Select UserID from dbo.User_Account_Temp
+where dbo.User_Account_Temp.UserID in(Select dbo.User_Account_Temp.UserID
+from dbo.User_Account_Temp LEFT JOIN dbo.User_Account_Current ON dbo.User_Account_Temp.UserID = dbo.User_Account_Current.UserID
+group by dbo.User_Account_Temp.UserID, dbo.User_Account_Current.UserID
+having (((dbo.User_Account_Current.UserID) Is Null)))
+
+INSERT INTO @TEMP2 (userid)
+Select userid from @TEMP
+
+insert into dbo.User_Account_Ticket_temp(UserID,Other_Ticket)
+Select userid, '' as Other_Ticket from @TEMP
+
+-- Start looping through the records
+WHILE EXISTS (SELECT * FROM @TEMP)
+BEGIN
+-- Grab the first record out
+SELECT Top 1 @userid = userid FROM @TEMP
+
+Select Top 1 @ticketid = Ticket_id from NAV12SQTTNP01.VMSSUP.dbo.Comment where Comment like '%'+@userid+'%'
+
+UPDATE dbo.User_Account_Temp SET Ticket_Id = @ticketid WHERE UserID = @userid
+UPDATE dbo.User_Account_Ticket_temp SET Ticket_Id = @ticketid WHERE UserID = @userid
+
+-- Drop the record so we can move onto the next one
+DELETE FROM @TEMP WHERE userid = @userid
+END
+
+/*Account - Step 3 */
+insert into dbo.User_Account_Current_temp(UserID,UserName,Designation,Department,SNO,Active,ViewVendorInfo,ViewAllProperties, Dollar,
+PublicAccess,CreatedDate,LastUpdate,accountupdatedby,RunDate,Ticket_Id,Email)
+Select UserID,UserName,Designation,Department,SNO,Active,ViewVendorInfo,ViewAllProperties,Dollar,PublicAccess,CreatedDate,
+LastUpdate,accountupdatedby,RunDate,Ticket_Id,Email from dbo.User_Account_Temp
+where dbo.User_Account_Temp.UserID in(Select userid from @TEMP2) 
+
+
+/* Account History */
+insert into dbo.Account_History_temp(UserID,UserName,Designation,Department,Active,ViewVendorInfo,ViewAllProperties,Dollar,PublicAccess,CreatedDate,LastUpdate,accountupdatedby,RunDate,Ticket_Id,Field_Change,Email)
+Select UserID,UserName,Designation,Department,Active,ViewVendorInfo,ViewAllProperties,Dollar,PublicAccess,CreatedDate,LastUpdate,accountupdatedby,RunDate,Ticket_Id,'New Account' as Field_Change,Email  
+from dbo.User_Account_Temp where dbo.User_Account_Temp.UserID in(Select userid from @TEMP2)
+
+
+/* Step 1*/
+insert into @User_Account_Deleted_Temp(UserID,Ttype) 
+Select a.UserID, 'Designation' as Ttype from dbo.User_Account_Current a LEFT JOIN dbo.User_Account_Temp b 
+on (a.UserID = b.UserID) AND (a.Designation = b.Designation) 
+WHERE (((b.Designation) Is Null))
+
+
+/* Step 4*/
+insert into dbo.Account_History_temp(UserID,UserName,Designation,Department,Active,ViewVendorInfo,ViewAllProperties,Dollar,PublicAccess,CreatedDate,LastUpdate,accountupdatedby,RunDate,Field_Change,Email)
+Select UserID,UserName,Designation,Department,Active,ViewVendorInfo,ViewAllProperties,Dollar,PublicAccess,CreatedDate,LastUpdate,accountupdatedby,RunDate,'Designation' as Field_Change,Email 
+from dbo.User_Account_Temp where UserID in(Select UserID from @User_Account_Deleted_Temp where Ttype = 'Designation')
+
+
+/* Supervisor - New script*/
+insert into @User_Account_Deleted_Temp(UserID,Ttype) 
+Select a.UserID, 'Supervisor' as Ttype from dbo.User_Account_Current a LEFT JOIN dbo.User_Account_Temp b 
+on (a.UserID = b.UserID) AND (a.Supervisor = b.Supervisor) 
+WHERE (((b.Supervisor) Is Null))
+
+insert into dbo.Account_History_temp(UserID,UserName,Designation,Department,Active,ViewVendorInfo,ViewAllProperties,Dollar,PublicAccess,CreatedDate,LastUpdate,accountupdatedby,RunDate,Field_Change,Email,Supervisor)
+Select UserID,UserName,Designation,Department,Active,ViewVendorInfo,ViewAllProperties,Dollar,PublicAccess,CreatedDate,LastUpdate,accountupdatedby,RunDate,'Supervisor' as Field_Change,Email,Supervisor  
+from dbo.User_Account_Temp where UserID in(Select UserID from @User_Account_Deleted_Temp where Ttype = 'Supervisor')
+
+
+/* Step 2
+delete from dbo.User_Account_Current where UserID in(Select UserID from @User_Account_Deleted_Temp)
+*/
+
+/* Step 3
+insert into dbo.User_Account_Current(UserID,UserName,Designation,Department,Active,ViewVendorInfo,ViewAllProperties, Dollar,
+PublicAccess,CreatedDate,LastUpdate,accountupdatedby,RunDate)
+Select UserID,UserName,Designation,Department,Active,ViewVendorInfo,ViewAllProperties,Dollar,PublicAccess,CreatedDate,
+LastUpdate,accountupdatedby,RunDate from dbo.User_Account_Temp where UserID in(Select UserID from @User_Account_Deleted_Temp)
+*/
+
+/**************/
+
+/* Account - Department 
+delete from @User_Account_Deleted_Temp
+*/
+
+/* Step 1*/
+insert into @User_Account_Deleted_Temp(UserID,Ttype) 
+Select a.UserID, 'Department' as Ttype from dbo.User_Account_Current a LEFT JOIN dbo.User_Account_Temp b 
+on (a.UserID = b.UserID) AND (a.Department = b.Department) 
+WHERE (((b.Department) Is Null))
+
+
+/* Step 2
+delete from dbo.User_Account_Current where UserID in(Select UserID from @User_Account_Deleted_Temp)
+*/
+
+
+/* Step 3
+insert into dbo.User_Account_Current(UserID,UserName,Designation,Department,Active,ViewVendorInfo,ViewAllProperties, Dollar,
+PublicAccess,CreatedDate,LastUpdate,accountupdatedby,RunDate)
+Select UserID,UserName,Designation,Department,Active,ViewVendorInfo,ViewAllProperties,Dollar,PublicAccess,CreatedDate,
+LastUpdate,accountupdatedby,RunDate from dbo.User_Account_Temp where UserID in(Select UserID from @User_Account_Deleted_Temp)
+*/
+
+/* Step 4*/
+insert into dbo.Account_History_temp(UserID,UserName,Designation,Department,Active,ViewVendorInfo,ViewAllProperties,Dollar,PublicAccess,CreatedDate,LastUpdate,accountupdatedby,RunDate,Field_Change,Email)
+Select UserID,UserName,Designation,Department,Active,ViewVendorInfo,ViewAllProperties,Dollar,PublicAccess,CreatedDate,LastUpdate,accountupdatedby,RunDate,'Department' as Field_Change,Email 
+from dbo.User_Account_Temp where UserID in(Select UserID from @User_Account_Deleted_Temp where Ttype = 'Department')
+
+
+/**************/
+
+/* Account - Active 
+delete from @User_Account_Deleted_Temp
+*/
+
+
+/* Step 1*/
+insert into @User_Account_Deleted_Temp(UserID,Ttype) 
+Select a.UserID, 'Active' as Ttype from dbo.User_Account_Current a LEFT JOIN dbo.User_Account_Temp b 
+on (a.UserID = b.UserID) AND (a.Active = b.Active) 
+WHERE (((b.Active) Is Null))
+
+/* Process Account Expired 
+
+DECLARE @uid varchar(50)
+DECLARE @lastupdate varchar(19)
+DECLARE @id AS INT
+
+DECLARE @TEMP3 TABLE (userid varchar(50))
+
+-- Insert into the temporary table a list of Active records 
+INSERT INTO @TEMP3 (userid)
+Select a.UserID from @User_Account_Deleted_Temp a inner join dbo.User_Account_Temp b on a.UserID = b.UserID
+where a.Ttype = 'Active' and b.LastUpdate < convert(varchar(19),DATEADD(day,-30,GETDATE()),120)
+
+-- Start looping through the records
+WHILE EXISTS (Select * from @TEMP3)
+BEGIN
+
+SELECT Top 1 @uid = a.userid, @lastupdate = CONVERT(VARCHAR(19),b.LastUpdate,120) from @TEMP3 a
+  inner join dbo.User_Account_Temp b on a.userid = b.UserID
+
+-- Grab the first record out
+	Select top 1 @id = datediff(day,@lastupdate,uul.act_logindate) from 
+	NAV12SQVMSMP04.FPREOPRO.dbo.ref_users users with (nolock)
+	left join NAV12SQVMSMP04.FPREOPRO.dbo.ums_user_login uul with (nolock) on users.sno=uul.user_sno
+	where users.username = @uid and error_code = '104' order by uul.act_logindate desc
+
+	IF @id IS not NULL and @id > 30
+	BEGIN
+		update @User_Account_Deleted_Temp set Ttype = 'Account Expired' where UserID = @uid
+	END 
+
+-- Drop the record so we can move onto the next one
+DELETE FROM @TEMP3 WHERE userid = @uid
+
+END  */
+
+
+/* Step 2
+delete from dbo.User_Account_Current where UserID in(Select UserID from @User_Account_Deleted_Temp)
+*/
+
+
+/* Step 3
+insert into dbo.User_Account_Current(UserID,UserName,Designation,Department,Active,ViewVendorInfo,ViewAllProperties, Dollar,
+PublicAccess,CreatedDate,LastUpdate,accountupdatedby,RunDate)
+Select UserID,UserName,Designation,Department,Active,ViewVendorInfo,ViewAllProperties,Dollar,PublicAccess,CreatedDate,
+LastUpdate,accountupdatedby,RunDate from dbo.User_Account_Temp where UserID in(Select UserID from @User_Account_Deleted_Temp)
+*/
+
+/* Step 4*/
+/* insert into dbo.Account_History_temp(UserID,UserName,Designation,Department,Active,ViewVendorInfo,ViewAllProperties,Dollar,PublicAccess,CreatedDate,LastUpdate,accountupdatedby,RunDate,Field_Change,Email)
+Select a.UserID,a.UserName,a.Designation,a.Department,a.Active,a.ViewVendorInfo,a.ViewAllProperties,a.Dollar,a.PublicAccess,a.CreatedDate,a.LastUpdate,a.accountupdatedby,a.RunDate,b.Ttype as Field_Change,a.Email from dbo.User_Account_Temp a 
+inner join @User_Account_Deleted_Temp b on a.UserID = b.UserID where b.Ttype in('Active','Account Expired') */
+
+/*
+Select UserID,UserName,Designation,Department,Active,ViewVendorInfo,ViewAllProperties,Dollar,PublicAccess,CreatedDate,LastUpdate,accountupdatedby,RunDate,'Active' as Field_Change 
+from dbo.User_Account_Temp where UserID in(Select UserID from @User_Account_Deleted_Temp where Ttype = 'Active')
+*/
+
+/**************/
+
+/* Account - Email */
+insert into @User_Account_Deleted_Temp(UserID,Ttype) 
+Select a.UserID, 'Email' as Ttype from dbo.User_Account_Current a LEFT JOIN dbo.User_Account_Temp b 
+on (a.UserID = b.UserID) AND (a.Email = b.Email) 
+WHERE (((b.Email) Is Null))
+
+insert into dbo.Account_History_temp(UserID,UserName,Designation,Department,Email,Active,ViewVendorInfo,ViewAllProperties,Dollar,PublicAccess,CreatedDate,LastUpdate,accountupdatedby,RunDate,Field_Change)
+Select UserID,UserName,Designation,Department,Email,Active,ViewVendorInfo,ViewAllProperties,Dollar,PublicAccess,CreatedDate,LastUpdate,accountupdatedby,RunDate,'Email' as Field_Change 
+from dbo.User_Account_Temp where UserID in(Select UserID from @User_Account_Deleted_Temp where Ttype = 'Email')
+
+
+
+/* Account - View Vendor Info 
+delete from @User_Account_Deleted_Temp
+*/
+
+/* Step 1*/
+insert into @User_Account_Deleted_Temp(UserID,Ttype) 
+Select a.UserID, 'Vendor Info' as Ttype from dbo.User_Account_Current a LEFT JOIN dbo.User_Account_Temp b 
+on (a.UserID = b.UserID) AND (a.ViewVendorInfo = b.ViewVendorInfo) 
+WHERE (((b.ViewVendorInfo) Is Null))
+
+/* Step 2
+delete from dbo.User_Account_Current where UserID in(Select UserID from @User_Account_Deleted_Temp)
+*/
+
+/* Step 3
+insert into dbo.User_Account_Current(UserID,UserName,Designation,Department,Active,ViewVendorInfo,ViewAllProperties, Dollar,
+PublicAccess,CreatedDate,LastUpdate,accountupdatedby,RunDate)
+Select UserID,UserName,Designation,Department,Active,ViewVendorInfo,ViewAllProperties,Dollar,PublicAccess,CreatedDate,
+LastUpdate,accountupdatedby,RunDate from dbo.User_Account_Temp where UserID in(Select UserID from @User_Account_Deleted_Temp)
+*/
+
+/* Step 4*/
+insert into dbo.Account_History_temp(UserID,UserName,Designation,Department,Active,ViewVendorInfo,ViewAllProperties,Dollar,PublicAccess,CreatedDate,LastUpdate,accountupdatedby,RunDate,Field_Change,Email)
+Select UserID,UserName,Designation,Department,Active,ViewVendorInfo,ViewAllProperties,Dollar,PublicAccess,CreatedDate,LastUpdate,accountupdatedby,RunDate,'Vendor Info' as Field_Change,Email 
+from dbo.User_Account_Temp where UserID in(Select UserID from @User_Account_Deleted_Temp where Ttype = 'Vendor Info')
+
+/**************/
+
+/* Account - View All Properties 
+delete from @User_Account_Deleted_Temp
+*/
+
+/* Step 1*/
+insert into @User_Account_Deleted_Temp(UserID,Ttype) 
+Select a.UserID, 'ViewAllProperties' as Ttype from dbo.User_Account_Current a LEFT JOIN dbo.User_Account_Temp b 
+on (a.UserID = b.UserID) AND (a.ViewAllProperties = b.ViewAllProperties) 
+WHERE (((b.ViewAllProperties) Is Null))
+
+
+/* Step 2
+delete from dbo.User_Account_Current where UserID in(Select UserID from @User_Account_Deleted_Temp)
+*/
+
+/* Step 3
+insert into dbo.User_Account_Current(UserID,UserName,Designation,Department,Active,ViewVendorInfo,ViewAllProperties, Dollar,
+PublicAccess,CreatedDate,LastUpdate,accountupdatedby,RunDate)
+Select UserID,UserName,Designation,Department,Active,ViewVendorInfo,ViewAllProperties,Dollar,PublicAccess,CreatedDate,
+LastUpdate,accountupdatedby,RunDate from dbo.User_Account_Temp where UserID in(Select UserID from @User_Account_Deleted_Temp)
+*/
+
+/* Step 4*/
+insert into dbo.Account_History_temp(UserID,UserName,Designation,Department,Active,ViewVendorInfo,ViewAllProperties,Dollar,PublicAccess,CreatedDate,LastUpdate,accountupdatedby,RunDate,Field_Change,Email)
+Select UserID,UserName,Designation,Department,Active,ViewVendorInfo,ViewAllProperties,Dollar,PublicAccess,CreatedDate,LastUpdate,accountupdatedby,RunDate,'ViewAllProperties' as Field_Change,Email 
+from dbo.User_Account_Temp where UserID in(Select UserID from @User_Account_Deleted_Temp where Ttype = 'ViewAllProperties')
+
+/**************/
+
+/* Account - Dollar 
+delete from @User_Account_Deleted_Temp
+*/
+/* Step 1*/
+insert into @User_Account_Deleted_Temp(UserID,Ttype) 
+Select a.UserID, 'Dollar' as Ttype from dbo.User_Account_Current a LEFT JOIN dbo.User_Account_Temp b 
+on (a.UserID = b.UserID) AND (a.Dollar = b.Dollar) 
+WHERE (((b.Dollar) Is Null))
+
+/* Step 2
+delete from dbo.User_Account_Current where UserID in(Select UserID from @User_Account_Deleted_Temp)
+*/
+
+/* Step 3
+insert into dbo.User_Account_Current(UserID,UserName,Designation,Department,Active,ViewVendorInfo,ViewAllProperties, Dollar,
+PublicAccess,CreatedDate,LastUpdate,accountupdatedby,RunDate)
+Select UserID,UserName,Designation,Department,Active,ViewVendorInfo,ViewAllProperties,Dollar,PublicAccess,CreatedDate,
+LastUpdate,accountupdatedby,RunDate from dbo.User_Account_Temp where UserID in(Select UserID from @User_Account_Deleted_Temp)
+*/
+
+/* Step 4*/
+insert into dbo.Account_History_temp(UserID,UserName,Designation,Department,Active,ViewVendorInfo,ViewAllProperties,Dollar,PublicAccess,CreatedDate,LastUpdate,accountupdatedby,RunDate,Field_Change,Email)
+Select UserID,UserName,Designation,Department,Active,ViewVendorInfo,ViewAllProperties,Dollar,PublicAccess,CreatedDate,LastUpdate,accountupdatedby,RunDate,'Dollar' as Field_Change,Email 
+from dbo.User_Account_Temp where UserID in(Select UserID from @User_Account_Deleted_Temp where Ttype = 'Dollar')
+
+/**************/
+
+/* Account - Public Access 
+delete from @User_Account_Deleted_Temp
+*/
+
+/* Step 1*/
+insert into @User_Account_Deleted_Temp(UserID,Ttype) 
+Select a.UserID, 'Public Access' as Ttype from dbo.User_Account_Current a LEFT JOIN dbo.User_Account_Temp b 
+on (a.UserID = b.UserID) AND (a.PublicAccess = b.PublicAccess) 
+WHERE (((b.PublicAccess) Is Null))
+
+/* Step 2
+delete from dbo.User_Account_Current where UserID in(Select UserID from @User_Account_Deleted_Temp)
+*/
+
+/* Step 3
+insert into dbo.User_Account_Current(UserID,UserName,Designation,Department,Active,ViewVendorInfo,ViewAllProperties, Dollar,
+PublicAccess,CreatedDate,LastUpdate,accountupdatedby,RunDate)
+Select UserID,UserName,Designation,Department,Active,ViewVendorInfo,ViewAllProperties,Dollar,PublicAccess,CreatedDate,
+LastUpdate,accountupdatedby,RunDate from dbo.User_Account_Temp where UserID in(Select UserID from @User_Account_Deleted_Temp)
+*/
+
+/* Step 4*/
+insert into dbo.Account_History_temp(UserID,UserName,Designation,Department,Active,ViewVendorInfo,ViewAllProperties,Dollar,PublicAccess,CreatedDate,LastUpdate,accountupdatedby,RunDate,Field_Change,Email)
+Select UserID,UserName,Designation,Department,Active,ViewVendorInfo,ViewAllProperties,Dollar,PublicAccess,CreatedDate,LastUpdate,accountupdatedby,RunDate,'Public Access' as Field_Change,Email 
+from dbo.User_Account_Temp where UserID in(Select UserID from @User_Account_Deleted_Temp where Ttype = 'Public Access')
+
+
+/* Delete from dbo.User_Account_Current */
+delete from dbo.User_Account_Current where UserID in(Select UserID from @User_Account_Deleted_Temp group by UserID)
+
+/* Insert into dbo.User_Account_Current */
+insert into dbo.User_Account_Current(UserID,UserName,Designation,Department,SNO,Active,ViewVendorInfo,ViewAllProperties, Dollar,
+PublicAccess,CreatedDate,LastUpdate,accountupdatedby,RunDate,Email,Supervisor)
+Select UserID,UserName,Designation,Department,SNO,Active,ViewVendorInfo,ViewAllProperties,Dollar,PublicAccess,CreatedDate,LastUpdate,accountupdatedby,RunDate,Email,Supervisor from dbo.User_Account_Temp where UserID in(Select UserID from @User_Account_Deleted_Temp group by UserID)
+	   
+/* insert records from dbo.User_Account_Temp against dbo.User_Account_Current */
+insert into dbo.User_Account_Current(UserID,UserName,Designation,Department,SNO,Active,ViewVendorInfo,ViewAllProperties, Dollar,
+PublicAccess,CreatedDate,LastUpdate,accountupdatedby,RunDate,Email,Supervisor)
+Select UserID,UserName,Designation,Department,SNO,Active,ViewVendorInfo,ViewAllProperties,Dollar,PublicAccess,CreatedDate,LastUpdate,
+accountupdatedby,RunDate,Email,Supervisor from dbo.User_Account_Current_temp
+	   
+
+/* dbo.User_Account_Ticket */
+insert into dbo.User_Account_Ticket(UserID,Ticket_Id,Other_Ticket)
+Select UserID,Ticket_Id,Other_Ticket from dbo.User_Account_Ticket_temp
+
+/*  */
+insert into dbo.Account_History(UserID,UserName,Designation,Department,Active,ViewVendorInfo,ViewAllProperties,Dollar,PublicAccess,CreatedDate,LastUpdate,accountupdatedby,RunDate,Ticket_Id,Field_Change,Email,Supervisor)
+Select UserID,UserName,Designation,Department,Active,ViewVendorInfo,ViewAllProperties,Dollar,PublicAccess,CreatedDate,LastUpdate,accountupdatedby,RunDate,Ticket_Id,Field_Change,Email,Supervisor from dbo.Account_History_temp
+
+
+/* Delete from dbo.User_Account_Temp */
+Delete from dbo.User_Account_Temp
+
+
+/*Delete from dbo.tmp_tech_details and dbo.tmp_uam_details */
+Delete from dbo.tmp_tech_details
+Delete from dbo.tmp_uam_details
+
+end
+end
