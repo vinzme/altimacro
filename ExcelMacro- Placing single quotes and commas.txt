@@ -1,0 +1,11 @@
+Sub SQL()
+Dim LastRow As Long
+Dim Col As String
+    ActiveCell.FormulaR1C1 = "=IF(R[1]C[-1]="""",""'""&RC[-1]&""'"",""'""&RC[-1]&""',"")"
+    Col = ActiveCell.Offset(0, -1).Address
+    Col = Mid(Col, 2, 1)
+    LastRow = ActiveSheet.Cells(ActiveSheet.Rows.Count, Col).End(xlUp).Row
+    Selection.AutoFill Destination:=Range(ActiveCell.Address & ":" & Left(ActiveCell.Address, 2) & LastRow)
+    Range(ActiveCell.Address & ":" & Left(ActiveCell.Address, 2) & LastRow).Select
+    ActiveSheet.Calculate
+End Sub
