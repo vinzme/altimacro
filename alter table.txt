@@ -1,0 +1,3 @@
+
+ALTER TABLE dbo.User_Account_Ticket
+ALTER COLUMN Other_Ticket varchar(300)

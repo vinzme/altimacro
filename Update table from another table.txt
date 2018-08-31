@@ -1,0 +1,7 @@
+UPDATE A
+SET A.SNO = B.sno
+FROM
+    dbo.User_Account_Current A 
+        INNER JOIN @User_Account_Deleted_Temp B
+        ON
+        A.UserID = B.UserID

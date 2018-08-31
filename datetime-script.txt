@@ -1,0 +1,32 @@
+DECLARE
+  @StartTime time,
+  @EndTime   time;
+
+SET @StartTime = '22:30:00';
+SET @EndTime   = '00:52:00';
+
+WITH timerange AS (
+  SELECT
+    StartTime = CAST(@StartTime AS datetime),EndTime   = DATEADD(DAY,CASE WHEN @StartTime > @EndTime THEN 1 ELSE 0 END,CAST(@EndTime AS datetime))),
+		hourly AS ( SELECT n.number, t.StartTime, t.EndTime, HStart = DATEADD(HOUR, DATEDIFF(HOUR, 0, t.StartTime) + n.number    , 0),
+		HEnd   = DATEADD(HOUR, DATEDIFF(HOUR, 0, t.StartTime) + n.number + 1, 0)
+  FROM timerange t
+    INNER JOIN master..spt_values n
+      ON n.number BETWEEN 0 AND DATEDIFF(HOUR, t.StartTime, t.EndTime) WHERE n.type = 'P'),
+hourly2 AS (
+  SELECT
+    number,
+    HStart = CASE WHEN StartTime > HStart THEN StartTime ELSE HStart END,
+    HEnd   = CASE WHEN EndTime   < HEnd   THEN EndTime   ELSE HEnd   END
+  FROM hourly
+)
+SELECT
+  StartHour   = DATEPART(HOUR  , HStart),
+  StartMinute = DATEPART(MINUTE, HStart),
+  EndHour     = DATEPART(HOUR  , HEnd  ),
+  EndMinute   = DATEPART(MINUTE, HEnd  ),
+  StartTime   = CAST(HStart AS time),
+  EndTime     = CAST(HEnd   AS time)
+FROM hourly2
+ORDER BY number
+;

@@ -1,0 +1,20 @@
+select prop.property_code,
+ps.property_status,
+vgrp.vendor_group,
+us.utility_status,
+convert(nvarchar(10),ush.last_update,101) as Closed_Date,
+convert(nvarchar(10),ush.last_update,108) as Closed_Time,
+usrs.username,
+cust.customer_name 
+from ref_property prop (nolock)
+join property_vendor_mapping pvm (nolock) on prop.Property_Id=pvm.property_Id and pvm.vendor_group_id in (6,5,4) and prop.is_active=1
+join utility_status_history ush (nolock) on pvm.vendor_mapping_id=ush.vendor_mapping_id
+join ref_vendor_group vgrp (nolock) on vgrp.vendor_group_id=pvm.vendor_group_id  
+join ref_utility_status us (nolock) on us.utility_status_id=ush.utility_status_id 
+join ref_users usrs (nolock) on usrs.sno=ush.last_changed_by_login_id  
+join ref_property_status ps (nolock) on ps.property_status_id=prop.property_status_id  
+join ref_customer cust (nolock) on cust.customer_id=prop.customer_id  
+join ref_department depart(nolock) on depart.department_id=usrs.department_id and depart.department_id in ('3','23')
+where  convert(nvarchar(8),ush.last_update,112) = '20170310'
+and cust.customer_name in ('OLSR','PFC','Altisource Residential Assets')
+

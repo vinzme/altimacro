@@ -1,0 +1,4 @@
+select UserID from dbo.User_Account_Current_WF as S cross apply dbo.FindUserLike(S.UserID)
+
+
+function - dbo.FindUserLike

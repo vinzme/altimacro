@@ -1,0 +1,17 @@
+declare @whatday integer
+declare @whattimehh as integer
+declare @whatmonth as integer
+
+SET @whatday = (select DATEPART(dd,getdate()))
+SET @whattimehh = (select DATEPART(hh,getdate()))
+
+if @whatday = 1
+	if @whattimehh < 5
+		SET @whatmonth = (SELECT datepart(mm, dateadd(mm,-1,GETDATE())))		
+	else
+		SET @whatmonth = (SELECT DATEPART(mm,getdate()))
+else
+	SET @whatmonth = (SELECT DATEPART(mm,getdate()))
+
+Select @whatmonth 
+go
