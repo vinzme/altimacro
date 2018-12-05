@@ -1,0 +1,8 @@
+http://mbtcrm.com/CRM5/Public/Login
+
+https://omail.mbtcheck.com/owa/#path=/mail/inbox
+
+
+jre
+
+http://mbm-support-qa/SCM_STD_5_2_3_SP1/Public/Login#SUPADMUSR
