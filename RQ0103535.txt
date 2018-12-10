@@ -1,0 +1,13 @@
+10/12/2018 11:41:36 AM--MikhailM
+
+Hi Sir Bobet,
+
+We can use the report "Ingredients Used in Recipes" to display all recipes that is using a particular product. Kindly go to Set Up > Catalogues > Recipe > Report > Ingredients Used in Recipes. You can filter using the product code or product description.
+
+Thank you and best regards,
+Mikhail
+
+10/12/2018 11:37:39 AM--MikhailM
+
+RQ0103535 Created.
+How we can find all recipes using a particular product code
