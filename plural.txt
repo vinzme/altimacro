@@ -1,0 +1,14 @@
+Recommended Courses:
+
+1.	Introduction to SQL  1st week of January
+https://app.pluralsight.com/library/courses/introduction-to-sql
+
+2.	SQL Server: Transact-SQL Basic Data Retrieval  1st week of January
+https://app.pluralsight.com/library/courses/sqlserver-dataretrieval
+
+3.	SQL Server: Transact-SQL Basic Data Modification  2nd week of January
+https://app.pluralsight.com/library/courses/sqlserver-datamodification
+
+4.	PostgreSQL: Introduction to SQL Queries  2nd week of January
+https://app.pluralsight.com/library/courses/postgresql-sql-queries-introduction
+
