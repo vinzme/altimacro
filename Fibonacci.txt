@@ -1,0 +1,27 @@
+Imports System.Collections.Generic
+Module Module1
+     Sub Main()
+        Dim n1 As Integer
+        Dim n2 As Integer
+        n1 = 1
+        n2 = 1
+        Console.WriteLine("{0}", n1)
+        While n2 < 300
+            Console.WriteLine(n2)
+            n2 = n2 + n1
+            n1 = n2 - n1
+        End While
+        Console.ReadLine()
+     End Sub
+End Module
+
+
+Private Sub btnCheckIt_Click()
+    isprime = "The Number is Prime"
+    notprime = "The Number is not Prime"
+primeness = True
+For x = 2 To Sqr(N)
+    If N / x = Int(N / x) Then primeness = False: Exit For
+Next
+Status = IIf(primeness, isprime, notprime)
+End Sub
